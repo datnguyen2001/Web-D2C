@@ -53,25 +53,25 @@ return [
             ],
             'number' => 2
         ],
-        [
-            'name' => 'request',
-            'title' => 'Quản lý yêu cầu',
-            'icon' => 'bi bi-grid',
-            'route' => null,
-            'submenu' => [
-                [
-                    'title' => 'Yêu cầu chưa duyệt',
-                    'route' => 'admin.request.approved-not',
-                    'name' => 'not_yet_approved'
-                ],
-                [
-                    'title' => 'Yêu cầu đã duyệt',
-                    'route' => 'admin.request.approved',
-                    'name' => 'approved'
-                ],
-            ],
-            'number' => 2
-        ],
+//        [
+//            'name' => 'request',
+//            'title' => 'Quản lý yêu cầu',
+//            'icon' => 'bi bi-grid',
+//            'route' => null,
+//            'submenu' => [
+//                [
+//                    'title' => 'Yêu cầu chưa duyệt',
+//                    'route' => 'admin.request.approved-not',
+//                    'name' => 'not_yet_approved'
+//                ],
+//                [
+//                    'title' => 'Yêu cầu đã duyệt',
+//                    'route' => 'admin.request.approved',
+//                    'name' => 'approved'
+//                ],
+//            ],
+//            'number' => 2
+//        ],
         [
             'name' => 'order',
             'title' => 'Quản lý đơn hàng',
@@ -97,5 +97,32 @@ return [
             'submenu' => [],
             'number' => 2
         ],
-]
+],
+    'shop' => [
+        [
+            'name' => 'dashboard',
+            'title' => 'Dashboard',
+            'icon' => 'bi bi-grid',
+            'route' => 'shop',
+            'submenu' => [],
+            'number' => 1
+        ],
+        [
+            'name' => 'product',
+            'title' => 'Quản lý sản phẩm',
+            'icon' => 'bi bi-grid',
+            'route' => 'shop.product.index',
+            'submenu' => [],
+            'number' => 2
+        ],
+        [
+            'name' => 'order',
+            'title' => 'Quản lý đơn hàng',
+            'icon' => 'bi bi-grid',
+            'route' => 'shop.order.index',
+            'parameters' => ['status' => 'all'],
+            'submenu' => [],
+            'number' => 3
+        ],
+    ]
 ];

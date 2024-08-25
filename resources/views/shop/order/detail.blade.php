@@ -1,4 +1,4 @@
-@extends('admin.layout.index')
+@extends('shop.layout.index')
 @section('main')
     <main id="main" class="main">
         <section class="section">
@@ -48,7 +48,6 @@
                                     <thead>
                                     <tr>
                                         <th scope="col">Stt</th>
-                                        <th scope="col">Thông tin shop</th>
                                         <th scope="col">Hình ảnh</th>
                                         <th scope="col">Tên sản phẩm</th>
                                         <th scope="col">Số lượng</th>
@@ -60,7 +59,6 @@
                                     @foreach($listData['order_item'] as $k => $order_item)
                                         <tr>
                                             <td>{{$k+=1}}</td>
-                                            <td>{{$listData->shop->name}}<br>{{$listData->shop->phone}}</td>
                                             <td><img class="image-preview" style="width: 80px; height: auto"
                                                      src="{{asset($order_item->product_image[0])}}"></td>
                                             <td>{{$order_item->product_name}}</td>
@@ -133,30 +131,30 @@
                             <div class="row mb-3">
                                 <div class="col-sm-12">
                                     @if($listData->status == 0)
-                                        <a href="{{url('admin/order/status/'.$listData->id.'/1')}}">
+                                        <a href="{{url('shop/order/status/'.$listData->id.'/1')}}">
                                             <button type="submit" class="btn btn-primary">Xác nhận đơn hàng</button>
                                         </a>
-                                        <a href="{{url('admin/order/status/'.$listData->id.'/4')}}">
+                                        <a href="{{url('shop/order/status/'.$listData->id.'/4')}}">
                                             <button type="submit" class="btn btn-danger">Huỷ đơn hàng</button>
                                         </a>
                                     @elseif($listData->status == 1)
-                                        <a href="{{url('admin/order/status/'.$listData->id.'/2')}}">
+                                        <a href="{{url('shop/order/status/'.$listData->id.'/2')}}">
                                             <button type="submit" class="btn btn-primary">Giao hàng</button>
                                         </a>
-                                        <a href="{{url('admin/order/status/'.$listData->id.'/4')}}">
+                                        <a href="{{url('shop/order/status/'.$listData->id.'/4')}}">
                                             <button type="submit" class="btn btn-danger">Huỷ đơn hàng</button>
                                         </a>
                                     @elseif($listData->status == 2)
-                                        <a href="{{url('admin/order/status/'.$listData->id.'/3')}}">
+                                        <a href="{{url('shop/order/status/'.$listData->id.'/3')}}">
                                             <button type="submit" class="btn btn-primary">Hoàn thành đơn hàng</button>
                                         </a>
-                                        <a href="{{url('admin/order/status/'.$listData->id.'/4')}}">
+                                        <a href="{{url('shop/order/status/'.$listData->id.'/4')}}">
                                             <button type="submit" class="btn btn-danger">Hủy đơn hàng
                                             </button>
                                         </a>
                                     @endif
-                                        @if($listData->status == 3)
-                                            <a href="{{url('admin/order/status/'.$listData->id.'/5')}}">
+                                        @if($listData->status ==3)
+                                            <a href="{{url('shop/order/status/'.$listData->id.'/5')}}">
                                                 <button type="submit" class="btn btn-danger">Trả hàng hoàn tiền
                                                 </button>
                                             </a>

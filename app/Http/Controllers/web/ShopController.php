@@ -279,9 +279,6 @@ class ShopController extends Controller
             }
             if ($request->has('unit')) {
                 $product->unit = $request->get('unit');
-            }
-            if ($request->has('unit')) {
-                $product->unit = $request->get('unit');
                 $product->en_unit = $translator->translate($request->get('unit'));
             }
             if ($request->has('contact_info')) {

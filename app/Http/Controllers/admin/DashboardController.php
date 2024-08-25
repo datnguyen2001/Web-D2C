@@ -9,6 +9,7 @@ use App\Models\ShopModel;
 use App\Models\User;
 use App\Models\WardsModel;
 use Illuminate\Http\Request;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class DashboardController extends Controller
 {
@@ -18,6 +19,15 @@ class DashboardController extends Controller
         $page_menu = 'dashboard';
         $page_sub = null;
         return view('admin.index', compact('titlePage','page_menu','page_sub'));
+    }
+
+    public function shop()
+    {
+        $titlePage = 'Trang chủ';
+        $page_menu = 'dashboard';
+        $page_sub = null;
+
+        return view('shop.index', compact('titlePage','page_menu','page_sub'));
     }
 
     public function getUser(Request $request)

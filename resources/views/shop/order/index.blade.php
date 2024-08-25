@@ -1,4 +1,4 @@
-@extends('admin.layout.index')
+@extends('shop.layout.index')
 @section('main')
     <main id="main" class="main">
         <section class="section">
@@ -7,25 +7,25 @@
                     <div class="card">
                         <div class="card-body d-flex align-items-center flex-wrap"
                              style="padding-top: 20px">
-                            <a href="{{url('admin/order/index/all')}}" type="button"
+                            <a href="{{url('shop/order/index/all')}}" type="button"
                                class="btn btn-outline-secondary mb @if($status == 'all') active @endif"> Tất cả đơn hàng
                                 <span style="font-weight: 700">{{$order_all}}</span></a>
-                            <a href="{{url('admin/order/index/0')}}"
+                            <a href="{{url('shop/order/index/0')}}"
                                class="btn btn-outline-warning mx-3 @if($status == 0) active @endif">Chờ xác nhận <span
                                     style="font-weight: 700">{{$order_pending}}</span></a>
-                            <a href="{{url('admin/order/index/1')}}" type="button"
+                            <a href="{{url('shop/order/index/1')}}" type="button"
                                class="btn btn-outline-info @if($status == 1) active @endif">Chờ lấy hàng <span
                                     style="font-weight: 700">{{$order_confirm}}</span></a>
-                            <a href="{{url('admin/order/index/2')}}" type="button"
+                            <a href="{{url('shop/order/index/2')}}" type="button"
                                class="btn btn-outline-primary mx-3 @if($status == 2) active @endif">Đang vận chuyển <span
                                     style="font-weight: 700">{{$order_delivery}}</span></a>
-                            <a href="{{url('admin/order/index/3')}}" type="button"
+                            <a href="{{url('shop/order/index/3')}}" type="button"
                                class="btn btn-outline-success @if($status == 3) active @endif">Đơn hàng hoàn thành <span
                                     style="font-weight: 700">{{$order_complete}}</span></a>
-                            <a href="{{url('admin/order/index/4')}}" type="button"
+                            <a href="{{url('shop/order/index/4')}}" type="button"
                                class="btn btn-outline-danger mx-3 @if($status == 4) active @endif">Đơn huỷ <span
                                     style="font-weight: 700">{{$order_cancel}}</span></a>
-                            <a href="{{url('admin/order/index/5')}}" type="button"
+                            <a href="{{url('shop/order/index/5')}}" type="button"
                                class="btn btn-outline-danger mt-3 @if($status == 5) active @endif">Trả hàng hoàn tiền <span
                                     style="font-weight: 700">{{$return_refund}}</span></a>
                         </div>
@@ -34,12 +34,12 @@
                     <div class="card" >
                         <div class="card-body d-flex justify-content-end" style="padding: 20px">
                             <form class="d-flex align-items-center w-50" method="get"
-                                  action="{{url('admin/order/index/'.$status)}}">
+                                  action="{{url('shop/order/index/'.$status)}}">
                                 <input name="search" type="text" value="{{request()->get('search')}}"
                                        placeholder="Tìm kiếm..." class="form-control" style="margin-right: 16px">
                                 <button class="btn btn-info" style="margin-left: 15px"><i class="bi bi-search"></i>
                                 </button>
-                                <a href="{{url('admin/order/index/all')}}" class="btn btn-danger"
+                                <a href="{{url('shop/order/index/all')}}" class="btn btn-danger"
                                    style="margin-left: 15px">Hủy </a>
                             </form>
                         </div>
@@ -68,7 +68,7 @@
                                         <tr>
                                             <th id="{{$value->id}}" scope="row">{{$k+1}}</th>
                                             <td>
-                                                <a href="{{url('admin/order/detail/'.$value->id)}}"
+                                                <a href="{{url('shop/order/detail/'.$value->id)}}"
                                                    class="btn btn-icon btn-light btn-hover-success btn-sm"
                                                    data-bs-toggle="tooltip" data-bs-placement="top" title=""
                                                    data-bs-original-title="Chi tiết đơn hàng">
@@ -98,35 +98,35 @@
                                             </td>
                                             <td style="border-top: 1px solid #cccccc">
                                                 @if($value->status == 0)
-                                                    <a href="{{url('admin/order/status/'.$value->id.'/1')}}">
+                                                    <a href="{{url('shop/order/status/'.$value->id.'/1')}}">
                                                         <button type="submit" class="btn btn-primary mb-2">Xác nhận đơn
                                                         </button>
                                                     </a>
-                                                    <a href="{{url('admin/order/status/'.$value->id.'/4')}}">
+                                                    <a href="{{url('shop/order/status/'.$value->id.'/4')}}">
                                                         <button type="submit" class="btn btn-danger">Huỷ đơn hàng
                                                         </button>
                                                     </a>
                                                 @elseif($value->status == 1)
-                                                    <a href="{{url('admin/order/status/'.$value->id.'/2')}}">
+                                                    <a href="{{url('shop/order/status/'.$value->id.'/2')}}">
                                                         <button type="submit" class="btn btn-primary mb-2">Giao hàng
                                                         </button>
                                                     </a>
-                                                    <a href="{{url('admin/order/status/'.$value->id.'/4')}}">
+                                                    <a href="{{url('shop/order/status/'.$value->id.'/4')}}">
                                                         <button type="submit" class="btn btn-danger">Huỷ đơn hàng
                                                         </button>
                                                     </a>
                                                 @elseif($value->status == 2)
-                                                    <a href="{{url('admin/order/status/'.$value->id.'/3')}}">
+                                                    <a href="{{url('shop/order/status/'.$value->id.'/3')}}">
                                                         <button type="submit" class="btn btn-primary">Hoàn thành đơn
                                                         </button>
                                                     </a>
-                                                    <a href="{{url('admin/order/status/'.$value->id.'/4')}}">
+                                                    <a href="{{url('shop/order/status/'.$value->id.'/4')}}">
                                                         <button type="submit" class="btn btn-danger">Hủy đơn hàng
                                                         </button>
                                                     </a>
                                                 @endif
                                                 @if($value->status == 3)
-                                                        <a href="{{url('admin/order/status/'.$value->id.'/5')}}">
+                                                        <a href="{{url('shop/order/status/'.$value->id.'/5')}}">
                                                             <button type="submit" class="btn btn-danger mt-2">Trả hàng hoàn tiền
                                                             </button>
                                                         </a>
@@ -137,7 +137,7 @@
                                     </tbody>
                                 </table>
                                 <div class="d-flex justify-content-center">
-                                    {{ $listData->appends(request()->all())->links('admin.pagination_custom.index') }}
+                                    {{ $listData->appends(request()->all())->links('shop.pagination_custom.index') }}
                                 </div>
                             @else
                                 <h5 class="card-title">Không có dữ liệu</h5>
