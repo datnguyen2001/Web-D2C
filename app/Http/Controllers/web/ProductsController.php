@@ -54,7 +54,8 @@ class ProductsController extends Controller
                     'p.status',
                     'p.src',
                     'pa.quantity as min_quantity',
-                    DB::raw('IF(pd.discount IS NOT NULL, pa.price - (pa.price * pd.discount / 100), pa.price) as price'),
+                    DB::raw('ROUND(IF(pd.discount IS NOT NULL, pa.price - (pa.price * pd.discount / 100), pa.price), 0) as price'),
+                    'pa.price as price_original',
                     DB::raw('IFNULL(pd.discount, 0) as discount'),
                     's.name as shop_name',
                     'pr.name as province_name'
@@ -117,7 +118,8 @@ class ProductsController extends Controller
                     'p.status',
                     'p.src',
                     'pa.quantity as min_quantity',
-                    DB::raw('IF(pd.discount IS NOT NULL, pa.price - (pa.price * pd.discount / 100), pa.price) as price'),
+                    DB::raw('ROUND(IF(pd.discount IS NOT NULL, pa.price - (pa.price * pd.discount / 100), pa.price), 0) as price'),
+                    'pa.price as price_original',
                     DB::raw('IFNULL(pd.discount, 0) as discount'),
                     's.name as shop_name',
                     'pr.name as province_name'
@@ -195,7 +197,8 @@ class ProductsController extends Controller
                     'p.status',
                     'p.src',
                     'pa.quantity as min_quantity',
-                    DB::raw('IF(pd.discount IS NOT NULL, pa.price - (pa.price * pd.discount / 100), pa.price) as price'),
+                    DB::raw('ROUND(IF(pd.discount IS NOT NULL, pa.price - (pa.price * pd.discount / 100), pa.price), 0) as price'),
+                    'pa.price as price_original',
                     DB::raw('IFNULL(pd.discount, 0) as discount'),
                     's.name as shop_name',
                     'pr.name as province_name',
@@ -272,7 +275,8 @@ class ProductsController extends Controller
                     'p.src',
                     'pa.quantity as min_quantity',
                     DB::raw('IFNULL(pd.discount, 0) as discount'),
-                    DB::raw('pa.price - (pa.price * IFNULL(pd.discount, 0) / 100) as price'),
+                    DB::raw('ROUND(pa.price - (pa.price * IFNULL(pd.discount, 0) / 100), 0) as price'),
+                    'pa.price as price_original',
                     's.name as shop_name',
                     'pr.name as province_name'
                 )->where('p.display', '=', 1)
@@ -328,7 +332,8 @@ class ProductsController extends Controller
                     'p.status',
                     'p.src',
                     'pa.quantity as min_quantity',
-                    DB::raw('IF(pd.discount IS NOT NULL, pa.price - (pa.price * pd.discount / 100), pa.price) as price'),
+                    DB::raw('ROUND(IF(pd.discount IS NOT NULL, pa.price - (pa.price * pd.discount / 100), pa.price), 0) as price'),
+                    'pa.price as price_original',
                     DB::raw('IFNULL(pd.discount, 0) as discount'),
                     's.name as shop_name',
                     'pr.name as province_name'
@@ -416,7 +421,7 @@ class ProductsController extends Controller
             }
 
             $products_viewed = DB::table('products as p')
-                    ->join(DB::raw("
+                ->join(DB::raw("
             (SELECT pa.product_id, pa.quantity, pa.price
             FROM products_attribute pa
             WHERE (pa.product_id, pa.quantity) IN (
@@ -425,36 +430,37 @@ class ProductsController extends Controller
                 GROUP BY pa2.product_id
             )) pa
         "), 'p.id', '=', 'pa.product_id')
-                    ->leftJoin('product_discounts as pd', function ($join) {
-                        $join->on('p.id', '=', 'pd.product_id')
-                            ->whereDate('pd.date_start', '<=', now())
-                            ->whereDate('pd.date_end', '>=', now())
-                            ->where('pd.number', '>', 0);
-                    })
-                    ->leftJoin('shop as s', 'p.shop_id', '=', 's.id')
-                    ->leftJoin('province as pr', 's.scope', '=', 'pr.province_id')
-                    ->select(
-                        'p.id',
-                        'p.name',
-                        'p.name_en',
-                        'p.slug',
-                        'p.sku',
-                        'p.unit',
-                        'p.en_unit',
-                        'p.quantity',
-                        'p.src',
-                        'pa.quantity as min_quantity',
-                        DB::raw('IF(pd.discount IS NOT NULL, pa.price - (pa.price * pd.discount / 100), pa.price) as price'),
-                        DB::raw('IFNULL(pd.discount, 0) as discount'),
-                        's.name as shop_name',
-                        'pr.name as province_name'
-                    )
-                    ->whereIn('p.id', $viewItemProduct)
-                    ->where('p.display', '=', 1)
-                    ->where('s.display', '=', 1)
-                    ->where('p.status', '=', 1)
-                    ->limit(12)
-                    ->get();
+                ->leftJoin('product_discounts as pd', function ($join) {
+                    $join->on('p.id', '=', 'pd.product_id')
+                        ->whereDate('pd.date_start', '<=', now())
+                        ->whereDate('pd.date_end', '>=', now())
+                        ->where('pd.number', '>', 0);
+                })
+                ->leftJoin('shop as s', 'p.shop_id', '=', 's.id')
+                ->leftJoin('province as pr', 's.scope', '=', 'pr.province_id')
+                ->select(
+                    'p.id',
+                    'p.name',
+                    'p.name_en',
+                    'p.slug',
+                    'p.sku',
+                    'p.unit',
+                    'p.en_unit',
+                    'p.quantity',
+                    'p.src',
+                    'pa.quantity as min_quantity',
+                    DB::raw('ROUND(IF(pd.discount IS NOT NULL, pa.price - (pa.price * pd.discount / 100), pa.price), 0) as price'),
+                    'pa.price as price_original',
+                    DB::raw('IFNULL(pd.discount, 0) as discount'),
+                    's.name as shop_name',
+                    'pr.name as province_name'
+                )
+                ->whereIn('p.id', $viewItemProduct)
+                ->where('p.display', '=', 1)
+                ->where('s.display', '=', 1)
+                ->where('p.status', '=', 1)
+                ->limit(12)
+                ->get();
             foreach ($products_viewed as $val){
                 $val->src = json_decode($val->src, true);
             }
@@ -489,7 +495,8 @@ class ProductsController extends Controller
                     'p.quantity',
                     'p.src',
                     'pa.quantity as min_quantity',
-                    DB::raw('IF(pd.discount IS NOT NULL, pa.price - (pa.price * pd.discount / 100), pa.price) as price'),
+                    DB::raw('ROUND(IF(pd.discount IS NOT NULL, pa.price - (pa.price * pd.discount / 100), pa.price), 0) as price'),
+                    'pa.price as price_original',
                     DB::raw('IFNULL(pd.discount, 0) as discount'),
                     's.name as shop_name',
                     'pr.name as province_name'
@@ -535,7 +542,8 @@ class ProductsController extends Controller
                     'p.quantity',
                     'p.src',
                     'pa.quantity as min_quantity',
-                    DB::raw('IF(pd.discount IS NOT NULL, pa.price - (pa.price * pd.discount / 100), pa.price) as price'),
+                    DB::raw('ROUND(IF(pd.discount IS NOT NULL, pa.price - (pa.price * pd.discount / 100), pa.price), 0) as price'),
+                    'pa.price as price_original',
                     DB::raw('IFNULL(pd.discount, 0) as discount'),
                     's.name as shop_name',
                     'pr.name as province_name'
@@ -599,7 +607,8 @@ class ProductsController extends Controller
                     'p.quantity',
                     'p.src',
                     'pa.quantity as min_quantity',
-                    DB::raw('IF(pd.discount IS NOT NULL, pa.price - (pa.price * pd.discount / 100), pa.price) as price'),
+                    DB::raw('ROUND(IF(pd.discount IS NOT NULL, pa.price - (pa.price * pd.discount / 100), pa.price), 0) as price'),
+                    'pa.price as price_original',
                     DB::raw('IFNULL(pd.discount, 0) as discount'),
                     's.name as shop_name',
                     'pr.name as province_name'
@@ -670,7 +679,8 @@ class ProductsController extends Controller
                 'p.quantity',
                 'p.src',
                 'pa.quantity as min_quantity',
-                DB::raw('IF(pd.discount IS NOT NULL, pa.price - (pa.price * pd.discount / 100), pa.price) as price'),
+                DB::raw('ROUND(IF(pd.discount IS NOT NULL, pa.price - (pa.price * pd.discount / 100), pa.price), 0) as price'),
+                'pa.price as price_original',
                 DB::raw('IFNULL(pd.discount, 0) as discount'),
                 's.name as shop_name',
                 'pr.name as province_name'
