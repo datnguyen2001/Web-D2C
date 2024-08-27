@@ -71,6 +71,8 @@ class CartController extends Controller
                             'p.name_en',
                             'p.unit',
                             'p.en_unit',
+                            'p.src',
+                            'p.quantity as inventory_quantity',
                             'pa.price as attribute_price',
                             'pd.discount',
                             'pd.number',
@@ -91,8 +93,10 @@ class CartController extends Controller
                                 'unit' => $product->unit,
                                 'unit_en' => $product->en_unit,
                                 'quantity' => $discountedQuantity,
+                                'inventory_quantity' => $product->inventory_quantity,
                                 'discount' => $product->discount,
-                                'price' => $product->final_price
+                                'price' => $product->final_price,
+                                'src' => json_decode($product->src, true),
                             ];
                         }
 
@@ -104,8 +108,10 @@ class CartController extends Controller
                                 'unit' => $product->unit,
                                 'unit_en' => $product->en_unit,
                                 'quantity' => $fullPriceQuantity,
+                                'inventory_quantity' => $product->inventory_quantity,
                                 'discount' => 0,
-                                'price' => $product->attribute_price
+                                'price' => $product->attribute_price,
+                                'src' => json_decode($product->src, true),
                             ];
                         }
                     }
@@ -124,9 +130,33 @@ class CartController extends Controller
         $productId = $request->get('product_id');
         $quantity = $request->get('quantity');
 
+        $product = DB::table('products')
+            ->join('products_attribute', 'products.id', '=', 'products_attribute.product_id')
+            ->where('products.id', $productId)
+            ->where('products.shop_id', $shopId)
+            ->select('products.quantity')
+            ->first();
+
+        if (!$product) {
+            return response()->json(['message' => 'Không tìm thấy sản phẩm', 'status' => false]);
+        }
+
         $cartItemsJson = Cookie::has('cartItems') ? Cookie::get('cartItems') : '[]';
         $cartItems = json_decode($cartItemsJson, true);
         $found = false;
+
+        $currentCartQuantity = 0;
+        foreach ($cartItems as $item) {
+            if ($item['product_id'] == $productId && $item['shop_id'] == $shopId) {
+                $currentCartQuantity = $item['quantity'];
+                break;
+            }
+        }
+
+        if ($currentCartQuantity + $quantity > $product->quantity) {
+            return response()->json(['message' => 'Số lượng sản phẩm vượt quá số lượng tồn kho', 'status' => false]);
+        }
+
         foreach ($cartItems as &$item) {
             if ($item['product_id'] == $productId && $item['shop_id'] == $shopId) {
                 $item['quantity'] += $quantity;
@@ -142,7 +172,7 @@ class CartController extends Controller
             ];
         }
         $cartItemsJson = json_encode($cartItems);
-        Cookie::queue('cartItems', $cartItemsJson, 60 * 24 * 30);
+        Cookie::queue('cartItems', $cartItemsJson, 60 * 24 * 30, '/', env('SESSION_DOMAIN'), true, true, false, 'None');
 
         return response()->json(['message' => 'Sản phẩm đã được thêm vào giỏ hàng', 'status' => true, 'cart' => $cartItems]);
     }
@@ -184,7 +214,7 @@ class CartController extends Controller
         }
 
         $cartItemsJson = json_encode($updatedCartItems);
-        Cookie::queue('cartItems', $cartItemsJson, 60 * 24 * 30);
+        Cookie::queue('cartItems', $cartItemsJson, 60 * 24 * 30, '/', env('SESSION_DOMAIN'), true, true, false, 'None');
 
         return response()->json(['message' => 'Sản phẩm đã được xóa khỏi giỏ hàng', 'status' => true, 'cart' => $updatedCartItems]);
     }
@@ -199,7 +229,7 @@ class CartController extends Controller
             return $item['shop_id'] != $shopId;
         });
         $cartItemsJson = json_encode(array_values($cartItems));
-        Cookie::queue('cartItems', $cartItemsJson, 60 * 24 * 30);
+        Cookie::queue('cartItems', $cartItemsJson, 60 * 24 * 30, '/', env('SESSION_DOMAIN'), true, true, false, 'None');
 
         return response()->json(['message' => 'Tất cả sản phẩm của cửa hàng đã được xóa khỏi giỏ hàng', 'status' => true, 'cart' => $cartItems]);
     }
@@ -214,10 +244,23 @@ class CartController extends Controller
         $cartItems = json_decode($cartItemsJson, true);
 
         $itemFound = false;
+        $product = DB::table('products')
+            ->join('products_attribute', 'products.id', '=', 'products_attribute.product_id')
+            ->where('products.id', $productId)
+            ->where('products.shop_id', $shopId)
+            ->select('products.quantity')
+            ->first();
+
+        if (!$product) {
+            return response()->json(['message' => 'Không tìm thấy sản phẩm', 'status' => false]);
+        }
 
         foreach ($cartItems as &$item) {
             if ($item['product_id'] == $productId && $item['shop_id'] == $shopId) {
                 if ($newQuantity > 0) {
+                    if ($newQuantity > $product->quantity) {
+                        return response()->json(['message' => 'Số lượng sản phẩm vượt quá số lượng tồn kho', 'status' => false]);
+                    }
                     $item['quantity'] = $newQuantity;
                 } else {
                     $cartItems = array_filter($cartItems, function ($cartItem) use ($productId, $shopId) {
@@ -234,7 +277,7 @@ class CartController extends Controller
         }
 
         $cartItemsJson = json_encode(array_values($cartItems));
-        Cookie::queue('cartItems', $cartItemsJson, 60 * 24 * 30);
+        Cookie::queue('cartItems', $cartItemsJson, 60 * 24 * 30, '/', env('SESSION_DOMAIN'), true, true, false, 'None');
 
         return response()->json(['message' => 'Số lượng sản phẩm trong giỏ hàng đã được cập nhật', 'status' => true, 'cart' => $cartItems]);
     }
@@ -292,6 +335,8 @@ class CartController extends Controller
                             'p.name_en',
                             'p.unit',
                             'p.en_unit',
+                            'p.src',
+                            'p.quantity as inventory_quantity',
                             'pa.price as attribute_price',
                             'pd.discount',
                             DB::raw('ROUND(IF(pd.discount IS NOT NULL, pa.price - (pa.price * pd.discount / 100), pa.price),0) as final_price')
@@ -306,9 +351,11 @@ class CartController extends Controller
                             'unit' => $product->unit,
                             'unit_en' => $product->en_unit,
                             'quantity' => $quantity,
+                            'inventory_quantity' => $product->inventory_quantity,
                             'original_price' => $product->attribute_price ?? 0,
                             'discount' => $product->discount,
-                            'price' => $product->final_price
+                            'price' => $product->final_price,
+                            'src' => json_decode($product->src, true),
                         ];
                     }
                 }
@@ -350,12 +397,15 @@ class CartController extends Controller
                 'p.unit',
                 'p.en_unit',
                 'p.shop_id',
+                'p.src',
+                'p.quantity as inventory_quantity',
                 'pa.price as attribute_price',
                 'pd.discount',
                 DB::raw('ROUND(IF(pd.discount IS NOT NULL, pa.price - (pa.price * pd.discount / 100), pa.price),0) as final_price')
             )
             ->first();
         $product->quantity = $quantity;
+        $product->src = json_decode($product->src, true);
 
         return response()->json(['message' => 'Lấy dữ liệu thành công', 'data' => $product, 'status' => true]);
     }
@@ -373,6 +423,24 @@ class CartController extends Controller
             $totalShip = 0;
             $totalPayment = 0;
 
+            // Kiểm tra tồn kho cho tất cả các sản phẩm trước khi tạo đơn hàng
+            foreach ($request->get('shop_items') as $shopItem) {
+                foreach ($shopItem['products'] as $product) {
+                    $productId = $product['product_id'];
+                    $quantity = $product['quantity'];
+
+                    $data_product = ProductsModel::find($productId);
+                    if ($data_product->quantity < $quantity) {
+                        return response()->json([
+                            'message' => "Sản phẩm '{$data_product->name}' có số lượng tồn kho không đủ",
+                            'status' => false
+                        ]);
+                    }
+                }
+            }
+
+            $cartItemsJson = Cookie::get('cartItems', '[]');
+            $cartItems = json_decode($cartItemsJson, true);
             foreach ($request->get('shop_items') as $shopItem) {
                 $shopId = $shopItem['shop_id'];
 
@@ -429,6 +497,14 @@ class CartController extends Controller
                             ->where('id', $productDiscount->id)
                             ->update(['number' => $remainingQuantity]);
                     }
+                    // Xóa sản phẩm đã mua khỏi giỏ hàng
+                    if (isset($cartItems)) {
+                        foreach ($cartItems as $key => $item) {
+                            if (is_array($item) && isset($item['product_id']) && $item['product_id'] == $productId) {
+                                unset($cartItems[$key]);
+                            }
+                        }
+                    }
                 }
                 $order->commodity_money = $orderTotalMoney;
                 $order->total_payment = $orderTotalMoney + $order->shipping_fee;
@@ -447,6 +523,8 @@ class CartController extends Controller
             $order_total->exchange_points = $request->get('exchange_points');
             $order_total->total_payment = $totalPayment;
             $order_total->save();
+
+            Cookie::queue('cartItems', json_encode($cartItems), 60 * 24 * 7, '/', env('SESSION_DOMAIN'), true, true, false, 'None');
 
             return response()->json(['message' => 'Tạo đơn hàng thành công', 'status' => true]);
         }catch(\Exception $e){
