@@ -55,9 +55,9 @@ class CartController extends Controller
                         ->leftJoin('products_attribute as pa', function ($join) use ($item) {
                             $join->on('p.id', '=', 'pa.product_id')
                                 ->where('pa.quantity', '<=', $item['quantity'])
-                                ->where(function($query) use ($item) {
+                                ->where(function ($query) use ($item) {
                                     $query->where('pa.quantity', '=', $item['quantity'])
-                                        ->orWhere(function($subquery) use ($item) {
+                                        ->orWhere(function ($subquery) use ($item) {
                                             $subquery->where('pa.quantity', '<=', $item['quantity'])
                                                 ->whereRaw('pa.quantity = (SELECT MAX(quantity) FROM products_attribute WHERE quantity <= ? AND product_id = pa.product_id)', [$item['quantity']]);
                                         });
@@ -319,9 +319,9 @@ class CartController extends Controller
                         ->leftJoin('products_attribute as pa', function ($join) use ($quantity) {
                             $join->on('p.id', '=', 'pa.product_id')
                                 ->where('pa.quantity', '<=', $quantity)
-                                ->where(function($query) use ($quantity) {
+                                ->where(function ($query) use ($quantity) {
                                     $query->where('pa.quantity', '=', $quantity)
-                                        ->orWhere(function($subquery) use ($quantity) {
+                                        ->orWhere(function ($subquery) use ($quantity) {
                                             $subquery->where('pa.quantity', '<=', $quantity)
                                                 ->whereRaw('pa.quantity = (SELECT MAX(quantity) FROM products_attribute WHERE quantity <= ? AND product_id = pa.product_id)', [$quantity]);
                                         });
@@ -381,15 +381,15 @@ class CartController extends Controller
             ->leftJoin('products_attribute as pa', function ($join) use ($quantity) {
                 $join->on('p.id', '=', 'pa.product_id')
                     ->where('pa.quantity', '<=', $quantity)
-                    ->where(function($query) use ($quantity) {
+                    ->where(function ($query) use ($quantity) {
                         $query->where('pa.quantity', '=', $quantity)
-                            ->orWhere(function($subquery) use ($quantity) {
+                            ->orWhere(function ($subquery) use ($quantity) {
                                 $subquery->where('pa.quantity', '<=', $quantity)
                                     ->whereRaw('pa.quantity = (SELECT MAX(quantity) FROM products_attribute WHERE quantity <= ? AND product_id = pa.product_id)', [$quantity]);
                             });
                     });
             })
-            ->leftJoin('shops as s', 'p.shop_id', '=', 's.id')
+            ->leftJoin('shop as s', 'p.shop_id', '=', 's.id')
             ->where('p.id', $productId)
             ->select(
                 'p.id',
@@ -407,23 +407,27 @@ class CartController extends Controller
             )
             ->first();
         $product->quantity = $quantity;
-        $product->src = json_decode($product->src, true);
         $shopDetails = [
-            'shop_id' => $product->shop_id,
-            'shop_name' => $product->shop_name,
-            'products' => [
-                'product_id' => $product->id,
-                'name' => $product->name,
-                'name_en' => $product->name_en,
-                'unit' => $product->unit,
-                'unit_en' => $product->en_unit,
-                'quantity' => $quantity,
-                'inventory_quantity' => $product->inventory_quantity,
-                'original_price' => $product->attribute_price ?? 0,
-                'discount' => $product->discount,
-                'price' => $product->final_price,
-                'src' => json_decode($product->src, true),
+            [
+                'shop_id' => $product->shop_id,
+                'shop_name' => $product->shop_name,
+                'products' => [
+                    [
+                        'product_id' => $product->id,
+                        'name' => $product->name,
+                        'name_en' => $product->name_en,
+                        'unit' => $product->unit,
+                        'unit_en' => $product->en_unit,
+                        'quantity' => $quantity,
+                        'inventory_quantity' => $product->inventory_quantity,
+                        'original_price' => $product->attribute_price ?? 0,
+                        'discount' => $product->discount,
+                        'price' => $product->final_price,
+                        'src' => json_decode($product->src, true),
+                    ]
+                ]
             ]
+
         ];
 
         return response()->json(['message' => 'Lấy dữ liệu thành công', 'data' => $shopDetails, 'status' => true]);
@@ -431,7 +435,7 @@ class CartController extends Controller
 
     public function pay(Request $request)
     {
-        try{
+        try {
             $user = JWTAuth::user();
             $today = date('Ymd');
             $orderCount = DB::table('orders')->whereDate('created_at', now()->format('Y-m-d'))->count();
@@ -546,7 +550,7 @@ class CartController extends Controller
             Cookie::queue('cartItems', json_encode($cartItems), 60 * 24 * 7, '/', env('SESSION_DOMAIN'), true, true, false, 'None');
 
             return response()->json(['message' => 'Tạo đơn hàng thành công', 'status' => true]);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage(), 'status' => false]);
         }
     }
